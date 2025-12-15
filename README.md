@@ -1,2 +1,1 @@
-# narupxq.github.io
-https://narupxq.github.io
+Extract Twitch Channel Points history and generate user lists for lotteries.
