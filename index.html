@@ -259,14 +259,15 @@ document.getElementById('out').addEventListener('click', e => {
 
   // caret 位置が見えるようにスクロール
   const totalLines = textarea.value.split('\n').length;
-  const lineHeight = textarea.scrollHeight / totalLines;
-  const caretLine = textarea.value.substr(0, index).split('\n').length;
-
-  // 表示行数（概算）
-  const visibleLines = textarea.clientHeight / lineHeight;
+  const lineHeight = textarea.scrollHeight / totalLines
 
   // 3行分下げる
-  textarea.scrollTop = lineHeight * textarea.value.substr(0, index).split('\n').length - lineHeight * 3;
+  const targetScrollTop = Math.max(0, lineHeight * textarea.value.substr(0, index).split('\n').length - lineHeight * 3);
+  
+  textarea.scrollTo({
+    top: targetScrollTop,
+    behavior: 'smooth'
+  });
 });
 
 function copyResult() {
@@ -334,3 +335,4 @@ srcTextarea.addEventListener('input', () => {
 
 </body>
 </html>
+
