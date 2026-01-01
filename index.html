@@ -236,13 +236,19 @@ function extractUsers(text) {
       .map(l => l.trim())
       .filter(Boolean);
 
+    // 1行なら「○日前」を自動補完してから解析する（途中までコピペされたとき用）
+    let fixedLines = lines.slice(0, 2);
+    if (fixedLines.length === 1) fixedLines = [fixedLines[0], '○日前'];
+
     let targetLine = null;
 
-    if (lines.length === 3) {
-      targetLine = lines[1];
-    } else if (lines.length === 2) {
-      targetLine = lines[0];
-    } else {
+    // ユーザー名っぽい行を優先して拾う（() 内があれば最優先）
+    targetLine =
+      fixedLines.find(l => /\([a-zA-Z0-9_]{4,25}\)/.test(l)) ||
+      fixedLines.find(l => /[a-zA-Z0-9_]{4,25}/.test(l)) ||
+      fixedLines[0];
+
+    if (!targetLine) {
       errors.push({ line: lineNumber });
       continue;
     }
@@ -277,6 +283,40 @@ function extractUsers(text) {
   }
 
   return { users: result, errors };
+}
+
+function normalizeInputText(text) {
+  // 改行コード統一
+  text = text.replace(/\r\n/g, '\n');
+
+  const blocks = text
+    .split(/\n\s*\n/)
+    .map(b =>
+      b
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean)
+    )
+    .filter(b => b.length > 0);
+
+  const normalizedBlocks = blocks.map((lines, i) => {
+    const two = lines.slice(0, 2);
+
+    // 最後のブロック・1行のみ・ユーザー名として解釈できる場合
+    if (i === blocks.length - 1 && two.length === 1) {
+      const line = two[0];
+      if (/[a-zA-Z0-9_]{4,25}/.test(line)) {
+        return line + '\n○日前';
+      }
+      return line;
+    }
+
+    // 通常
+    return two.join('\n');
+  });
+
+  // ブロック間は空白行1行、末尾にも空白行
+  return normalizedBlocks.join('\n\n') + '\n\n';
 }
 
 function run() {
@@ -337,6 +377,8 @@ function jumpToLine(line) {
     top: targetScrollTop,
     behavior: 'smooth'
   });
+
+  syncResultHighlight();
 }
 
 // 結果クリック時 → 入力欄の該当位置へ追従
@@ -372,6 +414,8 @@ document.getElementById('out').addEventListener('click', e => {
     top: targetScrollTop,
     behavior: 'smooth'
   });
+
+  syncResultHighlight();
 });
 
 function copyResult() {
@@ -444,8 +488,39 @@ function syncResultHighlight() {
 // ===== 入力即時抽出 =====
 const srcTextarea = document.getElementById('src');
 
-// 入力が変わるたびに自動抽出
+// 置換ループ防止
+let isNormalizing = false;
+
+// 入力が変わるたびに自動抽出（かつ入力値を正規化して置き換え）
 srcTextarea.addEventListener('input', () => {
+  if (isNormalizing) return;
+
+  const before = srcTextarea.value;
+  const normalized = normalizeInputText(before);
+
+  if (before !== normalized) {
+    isNormalizing = true;
+
+    const grew = normalized.length > before.length;
+
+    srcTextarea.value = normalized;
+
+    if (grew) {
+      srcTextarea.selectionStart =
+      srcTextarea.selectionEnd =
+        srcTextarea.value.length;
+    } else {
+      // 念のため
+      const caret = srcTextarea.selectionStart;
+      srcTextarea.setSelectionRange(
+        Math.min(caret, srcTextarea.value.length),
+        Math.min(caret, srcTextarea.value.length)
+      );
+    }
+
+    isNormalizing = false;
+  }
+
   updateLineNumbers();
   run();
 });
@@ -453,5 +528,3 @@ srcTextarea.addEventListener('input', () => {
 
 </body>
 </html>
-
-
