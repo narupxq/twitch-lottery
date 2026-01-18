@@ -35,6 +35,8 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 20px;
       box-sizing: border-box;
       gap: 8px;
@@ -49,13 +51,107 @@
     }
 
     /* ===== 結果表示 ===== */
-    pre {
+    .results {
+      display: flex;
       flex: 3;               /* 30% */
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .result-panel,
+    .summary-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       background: #f5f5f5;
       padding: 10px;
+      box-sizing: border-box;
+      border-radius: 6px;
+    }
+
+    .result-panel {
+      flex: 1;
+    }
+
+    .summary-panel {
+      flex: 1;
+    }
+
+    .panel-title {
+      margin: 0 0 8px;
+      font-size: 0.95em;
+    }
+
+    pre {
+      margin: 0;
       white-space: pre-wrap;
       overflow: auto;
       box-sizing: border-box;
+    }
+
+    #out {
+      flex: 1;
+    }
+
+    .summary-controls {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .summary-controls button {
+      padding: 4px 8px;
+      font-size: 0.85em;
+    }
+
+    .summary-search {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 6px 8px;
+      box-sizing: border-box;
+      font-size: 0.9em;
+    }
+
+    .summary-controls button.active {
+      background: #6a6aff;
+      color: #fff;
+    }
+
+    #summaryList {
+      overflow: auto;
+      flex: 1;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .summary-row:nth-child(odd) {
+      background: #ededed;
+    }
+
+    .summary-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .summary-count {
+      font-weight: bold;
+      min-width: 2.5em;
+      text-align: right;
+    }
+
+    @media (max-width: 900px) {
+      .results {
+        flex-direction: column;
+      }
     }
     
     /* 結果の各行 */
@@ -189,16 +285,33 @@ VIP6-Month SubscriberPrimeGamingsampleuser06
 VIPcheer 1,000sample_user10
 6分前"></textarea></div>
 
-  <h3>結果</h3>
-
-  <div>
-    <button onclick="copyResult()">結果をコピー</button>
-    <span>抽出人数：</span><span id="countNum"></span>
-    <span id="errorInfo" style="margin-left:12px; color:#c00;"></span>
-    <span id="copyStatus" class="copied"></span>
+  <div class="results">
+    <div class="result-panel">
+      <h4 class="panel-title">抽出結果</h4>
+      <div>
+        <button onclick="copyResult()">結果をコピー</button>
+        <span>抽出人数：</span><span id="countNum"></span>
+        <span id="errorInfo" style="margin-left:12px; color:#c00;"></span>
+        <span id="copyStatus" class="copied"></span>
+      </div>
+      <pre id="out"></pre>
+    </div>
+    <div class="summary-panel">
+      <h4 class="panel-title">ユーザー別 チャンネルポイント交換数</h4>
+      <input
+        id="summarySearch"
+        class="summary-search"
+        type="text"
+        placeholder="ユーザー名で検索"
+        aria-label="ユーザー名で検索"
+      />
+      <div class="summary-controls">
+        <button type="button" data-sort="count" class="active">交換数順</button>
+        <button type="button" data-sort="name">ユーザー名順</button>
+      </div>
+      <div id="summaryList"></div>
+    </div>
   </div>
-
-  <pre id="out"></pre>
 
   <p style="font-size: 0.9em; color: #555;">抽選サイトの入力欄に最初から入っている内容を削除し、貼り付けてください。</p>
 
@@ -329,6 +442,7 @@ function run() {
     .join('');
 
   document.getElementById('countNum').textContent = `${users.length} 人`;
+  renderSummary(users);
 
   const errorInfo = document.getElementById('errorInfo');
 
@@ -351,6 +465,43 @@ function run() {
   } else {
     errorInfo.textContent = '';
   }
+}
+
+let summarySortMode = 'count';
+
+function renderSummary(users) {
+  const query = (document.getElementById('summarySearch')?.value || '')
+    .trim()
+    .toLowerCase();
+  const countMap = new Map();
+  for (const user of users) {
+    countMap.set(user.name, (countMap.get(user.name) || 0) + 1);
+  }
+
+  const rows = [...countMap.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .filter(r => {
+      if (!query) return true;
+      return r.name.toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      if (summarySortMode === 'name') {
+        const nameCmp = a.name.localeCompare(b.name, 'en');
+        return nameCmp !== 0 ? nameCmp : b.count - a.count;
+      }
+      if (b.count !== a.count) return b.count - a.count;
+      return a.name.localeCompare(b.name, 'en');
+    });
+
+  const list = document.getElementById('summaryList');
+  list.innerHTML = rows
+    .map(r =>
+      `<div class="summary-row">
+        <span class="summary-name">${r.name}</span>
+        <span class="summary-count">${r.count}</span>
+      </div>`
+    )
+    .join('');
 }
 
 function jumpToLine(line) {
@@ -435,6 +586,8 @@ function copyResult() {
 const textarea = document.getElementById('src');
 const lineNumbers = document.getElementById('lineNumbers');
 const out = document.getElementById('out');
+const summaryButtons = document.querySelectorAll('.summary-controls button');
+const summarySearch = document.getElementById('summarySearch');
 
 function updateLineNumbers() {
   const lines = textarea.value.split('\n').length;
@@ -447,6 +600,19 @@ function updateLineNumbers() {
 
 textarea.addEventListener('scroll', () => {
   lineNumbers.scrollTop = textarea.scrollTop;
+});
+
+summaryButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    summarySortMode = btn.dataset.sort;
+    summaryButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    run();
+  });
+});
+
+summarySearch.addEventListener('input', () => {
+  renderSummary(extractUsers(textarea.value).users);
 });
 
 function syncResultHighlight() {
