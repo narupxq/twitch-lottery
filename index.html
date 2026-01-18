@@ -287,36 +287,36 @@ function extractUsers(text) {
 
 function normalizeInputText(text) {
   // 改行コード統一
-  text = text.replace(/\r\n/g, '\n');
+  const normalized = text.replace(/\r\n/g, '\n');
 
-  const blocks = text
-    .split(/\n\s*\n/)
-    .map(b =>
-      b
-        .split('\n')
-        .map(l => l.trim())
-        .filter(Boolean)
-    )
-    .filter(b => b.length > 0);
+  if (!normalized) return '';
 
-  const normalizedBlocks = blocks.map((lines, i) => {
-    const two = lines.slice(0, 2);
+  const trailingMatch = normalized.match(/\n*$/);
+  const trailingNewlines = trailingMatch ? trailingMatch[0] : '';
+  let base = normalized.slice(0, normalized.length - trailingNewlines.length);
 
-    // 最後のブロック・1行のみ・ユーザー名として解釈できる場合
-    if (i === blocks.length - 1 && two.length === 1) {
-      const line = two[0];
-      if (/[a-zA-Z0-9_]{4,25}/.test(line)) {
-        return line + '\n○日前';
-      }
-      return line;
+  if (base) {
+    const blocks = base.split(/\n\s*\n/).filter(b => b.trim());
+    const lastBlock = blocks[blocks.length - 1] || '';
+    const lines = lastBlock
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    // 最後のブロックが1行だけでユーザー名っぽい場合は日付行を補完
+    if (lines.length === 1 && /[a-zA-Z0-9_]{4,25}/.test(lines[0])) {
+      base += '\n○日前';
     }
+  }
 
-    // 通常
-    return two.join('\n');
-  });
+  let result = base + trailingNewlines;
 
-  // ブロック間は空白行1行、末尾にも空白行
-  return normalizedBlocks.join('\n\n') + '\n\n';
+  if (!result.endsWith('\n\n')) {
+    if (result.endsWith('\n')) result += '\n';
+    else result += '\n\n';
+  }
+
+  return result;
 }
 
 function run() {
@@ -496,27 +496,24 @@ srcTextarea.addEventListener('input', () => {
   if (isNormalizing) return;
 
   const before = srcTextarea.value;
+  const caretBefore = srcTextarea.selectionStart;
   const normalized = normalizeInputText(before);
+  const beforeTrim = before.replace(/\n*$/, '');
+  const normalizedTrim = normalized.replace(/\n*$/, '');
+  const appendedAtEnd =
+    normalized.length > before.length &&
+    (normalizedTrim === beforeTrim ||
+      normalizedTrim.startsWith(beforeTrim));
 
   if (before !== normalized) {
     isNormalizing = true;
 
-    const grew = normalized.length > before.length;
-
     srcTextarea.value = normalized;
 
-    if (grew) {
-      srcTextarea.selectionStart =
-      srcTextarea.selectionEnd =
-        srcTextarea.value.length;
-    } else {
-      // 念のため
-      const caret = srcTextarea.selectionStart;
-      srcTextarea.setSelectionRange(
-        Math.min(caret, srcTextarea.value.length),
-        Math.min(caret, srcTextarea.value.length)
-      );
-    }
+    const caret = appendedAtEnd
+      ? srcTextarea.value.length
+      : Math.min(caretBefore, srcTextarea.value.length);
+    srcTextarea.setSelectionRange(caret, caret);
 
     isNormalizing = false;
   }
