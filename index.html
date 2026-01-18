@@ -93,29 +93,12 @@
       flex: 1;
     }
 
-    .summary-controls {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-
-    .summary-controls button {
-      padding: 4px 8px;
-      font-size: 0.85em;
-    }
-
     .summary-search {
       width: 100%;
       margin-bottom: 8px;
       padding: 6px 8px;
       box-sizing: border-box;
       font-size: 0.9em;
-    }
-
-    .summary-controls button.active {
-      background: #6a6aff;
-      color: #fff;
     }
 
     #summaryList {
@@ -305,10 +288,6 @@ VIPcheer 1,000sample_user10
         placeholder="ユーザー名で検索"
         aria-label="ユーザー名で検索"
       />
-      <div class="summary-controls">
-        <button type="button" data-sort="count" class="active">交換数順</button>
-        <button type="button" data-sort="name">ユーザー名順</button>
-      </div>
       <div id="summaryList"></div>
     </div>
   </div>
@@ -467,8 +446,6 @@ function run() {
   }
 }
 
-let summarySortMode = 'count';
-
 function renderSummary(users) {
   const query = (document.getElementById('summarySearch')?.value || '')
     .trim()
@@ -485,10 +462,6 @@ function renderSummary(users) {
       return r.name.toLowerCase().includes(query);
     })
     .sort((a, b) => {
-      if (summarySortMode === 'name') {
-        const nameCmp = a.name.localeCompare(b.name, 'en');
-        return nameCmp !== 0 ? nameCmp : b.count - a.count;
-      }
       if (b.count !== a.count) return b.count - a.count;
       return a.name.localeCompare(b.name, 'en');
     });
@@ -586,7 +559,6 @@ function copyResult() {
 const textarea = document.getElementById('src');
 const lineNumbers = document.getElementById('lineNumbers');
 const out = document.getElementById('out');
-const summaryButtons = document.querySelectorAll('.summary-controls button');
 const summarySearch = document.getElementById('summarySearch');
 
 function updateLineNumbers() {
@@ -600,15 +572,6 @@ function updateLineNumbers() {
 
 textarea.addEventListener('scroll', () => {
   lineNumbers.scrollTop = textarea.scrollTop;
-});
-
-summaryButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    summarySortMode = btn.dataset.sort;
-    summaryButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    run();
-  });
 });
 
 summarySearch.addEventListener('input', () => {
