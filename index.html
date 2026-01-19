@@ -106,6 +106,7 @@
       flex: 1;
       border: 1px solid #d0d0d0;
       border-radius: 6px;
+      margin: 4px 0 0 0;
       padding: 8px;
       background: #fff;
     }
@@ -238,6 +239,24 @@
       padding: 6px 12px;
     }
 
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9em;
+      color: #555;
+      margin: 0;
+      user-select: none;
+    }
+
+    .toggle input {
+      margin: 0;
+    }
+
+    .toggle-row {
+      margin: 6px 0 10px;
+    }
+
     .cta {
       display: flex;
       flex-wrap: wrap;
@@ -350,6 +369,13 @@ VIPcheer 1,000sample_user10
       />
       <div id="summaryList"></div>
     </div>
+  </div>
+
+  <div class="toggle-row">
+    <label class="toggle">
+      <input type="checkbox" id="displayNameToggle" checked>
+      結果に表示名を含める
+    </label>
   </div>
 
   <div class="cta">
@@ -480,12 +506,9 @@ function run() {
   const text = document.getElementById('src').value;
   const { users, errors } = extractUsers(text);
 
-  const out = document.getElementById('out');
-  out.innerHTML = users
-    .map(u =>
-      `<div class="user-line" data-index="${u.index}" data-login="${u.name}">${u.name}</div>`
-    )
-    .join('');
+  lastUsers = users;
+
+  renderResults(users);
 
   document.getElementById('countNum').textContent = `${users.length} 人`;
   renderSummary(users);
@@ -515,6 +538,21 @@ function run() {
 
 const displayNameCache = new Map();
 const displayNamePending = new Set();
+let lastUsers = [];
+let rerenderTimer = null;
+let displayNameEnabled = true;
+
+function renderResults(users) {
+  const out = document.getElementById('out');
+  out.innerHTML = users
+    .map(u =>
+      `<div class="user-line" data-index="${u.index}" data-login="${u.name}">${u.name}</div>`
+    )
+    .join('');
+  if (displayNameEnabled) {
+    updateDisplayNames(out);
+  }
+}
 
 async function fetchDisplayName(login) {
   if (!login) return null;
@@ -540,6 +578,7 @@ async function fetchDisplayName(login) {
 }
 
 function applyDisplayName(login, displayName) {
+  if (!displayNameEnabled) return;
   if (!displayName) return;
   const safeLogin = CSS.escape(login);
   const targets = document.querySelectorAll(
@@ -552,6 +591,7 @@ function applyDisplayName(login, displayName) {
 }
 
 function updateDisplayNames(container) {
+  if (!displayNameEnabled) return;
   const names = [
     ...container.querySelectorAll('.summary-name[data-login]')
   ].map(el => el.dataset.login);
@@ -565,13 +605,33 @@ function updateDisplayNames(container) {
     }
     const displayName = await fetchDisplayName(login);
     applyDisplayName(login, displayName);
+    if ((document.getElementById('summarySearch')?.value || '').trim()) {
+      if (rerenderTimer) return;
+      rerenderTimer = setTimeout(() => {
+        rerenderTimer = null;
+        renderSummary(lastUsers);
+      }, 0);
+    }
   });
 }
 
+function resetDisplayNames() {
+  document.querySelectorAll('[data-login]').forEach(el => {
+    el.textContent = el.dataset.login;
+  });
+}
+
+function normalizeForSearch(value) {
+  if (!value) return '';
+  const normalized = value.normalize('NFKC').toLowerCase();
+  return normalized.replace(/[\u30a1-\u30f6]/g, ch =>
+    String.fromCharCode(ch.charCodeAt(0) - 0x60)
+  );
+}
+
 function renderSummary(users) {
-  const query = (document.getElementById('summarySearch')?.value || '')
-    .trim()
-    .toLowerCase();
+  const queryRaw = (document.getElementById('summarySearch')?.value || '').trim();
+  const query = normalizeForSearch(queryRaw);
   const countMap = new Map();
   for (const user of users) {
     countMap.set(user.name, (countMap.get(user.name) || 0) + 1);
@@ -581,10 +641,11 @@ function renderSummary(users) {
     .map(([name, count]) => ({ name, count }))
     .filter(r => {
       if (!query) return true;
-      if (r.name.toLowerCase().includes(query)) return true;
+      if (normalizeForSearch(r.name).includes(query)) return true;
+      if (!displayNameEnabled) return false;
       const displayName = displayNameCache.get(r.name);
       if (!displayName) return false;
-      return displayName.toLowerCase().includes(query);
+      return normalizeForSearch(displayName).includes(query);
     })
     .sort((a, b) => {
       if (b.count !== a.count) return b.count - a.count;
@@ -611,7 +672,9 @@ function renderSummary(users) {
     )
     .join('');
 
-  updateDisplayNames(list);
+  if (displayNameEnabled) {
+    updateDisplayNames(list);
+  }
 }
 
 function jumpToLine(line) {
@@ -697,6 +760,7 @@ const textarea = document.getElementById('src');
 const lineNumbers = document.getElementById('lineNumbers');
 const out = document.getElementById('out');
 const summarySearch = document.getElementById('summarySearch');
+const displayNameToggle = document.getElementById('displayNameToggle');
 
 function updateLineNumbers() {
   const lines = textarea.value.split('\n').length;
@@ -713,6 +777,15 @@ textarea.addEventListener('scroll', () => {
 
 summarySearch.addEventListener('input', () => {
   renderSummary(extractUsers(textarea.value).users);
+});
+
+displayNameToggle.addEventListener('change', () => {
+  displayNameEnabled = displayNameToggle.checked;
+  if (!displayNameEnabled) {
+    resetDisplayNames();
+  }
+  renderResults(lastUsers);
+  renderSummary(lastUsers);
 });
 
 function syncResultHighlight() {
