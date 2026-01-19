@@ -15,6 +15,7 @@
   <meta name="twitter:image" content="https://narupxq.github.io/twitch-lottery/assets/images/ogp.png">
   <title>Twitch チャネポユーザー抽出ツール</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
   <style>
     html, body {
@@ -28,6 +29,18 @@
 
     p {
       margin: 0 0 8px;
+    }
+
+    .input-note {
+      margin: 0 0 2px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    h2,
+    h3 {
+      line-height: 1.2;
+      margin-top: 0;
     }
     
     /* ===== レイアウト全体 ===== */
@@ -91,6 +104,10 @@
 
     #out {
       flex: 1;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      padding: 8px;
+      background: #fff;
     }
 
     .summary-search {
@@ -119,16 +136,41 @@
       background: #ededed;
     }
 
+    .summary-name-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
     .summary-name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
     }
 
     .summary-count {
       font-weight: bold;
       min-width: 2.5em;
       text-align: right;
+    }
+
+    .summary-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      color: #1a0dab;
+    }
+
+    .summary-link:hover {
+      text-decoration: underline;
+    }
+
+    .summary-link .material-symbols-outlined {
+      font-size: 1em;
+      line-height: 1;
     }
 
     @media (max-width: 900px) {
@@ -196,6 +238,25 @@
       padding: 6px 12px;
     }
 
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .cta button {
+      margin-right: 0;
+    }
+
+    .cta-text {
+      color: #555;
+      font-size: 0.95em;
+    }
+
     .copied {
       color: green;
       margin-left: 8px;
@@ -230,7 +291,8 @@
   <h2>Twitch チャネポユーザー抽出ツール</h2>
 
   <h3>入力</h3>
-  <p style="font-size: 0.9em; color: #555;">クリエイターダッシュボードから任意のチャンネルポイントの引き換え履歴を開き、表示されている内容をそのままコピーして貼り付けてください。</p>
+  <p class="input-note">クリエイターダッシュボードで任意のチャンネルポイントの引き換え履歴を開き、表示内容をそのままコピーして貼り付けてください。</p>
+  <p class="input-note">ユーザーごとに空行で区切って入力してください。</p>
 
   <div class="editor">
     <div id="lineNumbers"></div>
@@ -272,10 +334,8 @@ VIPcheer 1,000sample_user10
     <div class="result-panel">
       <h4 class="panel-title">抽出結果</h4>
       <div>
-        <button onclick="copyResult()">結果をコピー</button>
         <span>抽出人数：</span><span id="countNum"></span>
         <span id="errorInfo" style="margin-left:12px; color:#c00;"></span>
-        <span id="copyStatus" class="copied"></span>
       </div>
       <pre id="out"></pre>
     </div>
@@ -292,15 +352,20 @@ VIPcheer 1,000sample_user10
     </div>
   </div>
 
-  <p style="font-size: 0.9em; color: #555;">抽選サイトの入力欄に最初から入っている内容を削除し、貼り付けてください。</p>
-
-  <p>
-    <a href="https://www.randomdecider.com/ja/random-picker-wheel"
+  <div class="cta">
+    <button onclick="copyResult()">結果をコピー</button>
+    <span class="cta-text">してから</span>
+    <a
+      href="https://www.randomdecider.com/ja/random-picker-wheel"
       target="_blank"
       rel="noopener noreferrer">
-      抽選サイト を開く
+      抽選サイト
     </a>
-  </p>
+    <span class="cta-text">を開いて貼り付けてください。</span>
+    <span id="copyStatus" class="copied"></span>
+  </div>
+
+  <p style="font-size: 0.9em; color: #555;">抽選サイトの入力欄に最初から入っている内容は削除してから貼り付けてください。</p>
 
   <p style="font-size: 0.9em; color: #555;">
     ※ 入力内容はすべてブラウザ内で処理されており、外部への送信は行われません。
@@ -417,7 +482,9 @@ function run() {
 
   const out = document.getElementById('out');
   out.innerHTML = users
-    .map(u => `<div class="user-line" data-index="${u.index}">${u.name}</div>`)
+    .map(u =>
+      `<div class="user-line" data-index="${u.index}" data-login="${u.name}">${u.name}</div>`
+    )
     .join('');
 
   document.getElementById('countNum').textContent = `${users.length} 人`;
@@ -446,6 +513,61 @@ function run() {
   }
 }
 
+const displayNameCache = new Map();
+const displayNamePending = new Set();
+
+async function fetchDisplayName(login) {
+  if (!login) return null;
+  if (displayNameCache.has(login)) return displayNameCache.get(login);
+  if (displayNamePending.has(login)) return null;
+
+  displayNamePending.add(login);
+  try {
+    const response = await fetch(
+      `https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`
+    );
+    if (!response.ok) throw new Error('not_found');
+    const data = await response.json();
+    const displayName = data?.[0]?.displayName || null;
+    displayNameCache.set(login, displayName);
+    return displayName;
+  } catch {
+    displayNameCache.set(login, null);
+    return null;
+  } finally {
+    displayNamePending.delete(login);
+  }
+}
+
+function applyDisplayName(login, displayName) {
+  if (!displayName) return;
+  const safeLogin = CSS.escape(login);
+  const targets = document.querySelectorAll(
+    `[data-login="${safeLogin}"]`
+  );
+  targets.forEach(el => {
+    if (displayName === login) return;
+    el.textContent = `${login}（${displayName}）`;
+  });
+}
+
+function updateDisplayNames(container) {
+  const names = [
+    ...container.querySelectorAll('.summary-name[data-login]')
+  ].map(el => el.dataset.login);
+  const unique = [...new Set(names)];
+
+  unique.forEach(async login => {
+    const cached = displayNameCache.get(login);
+    if (cached !== undefined) {
+      applyDisplayName(login, cached);
+      return;
+    }
+    const displayName = await fetchDisplayName(login);
+    applyDisplayName(login, displayName);
+  });
+}
+
 function renderSummary(users) {
   const query = (document.getElementById('summarySearch')?.value || '')
     .trim()
@@ -459,7 +581,10 @@ function renderSummary(users) {
     .map(([name, count]) => ({ name, count }))
     .filter(r => {
       if (!query) return true;
-      return r.name.toLowerCase().includes(query);
+      if (r.name.toLowerCase().includes(query)) return true;
+      const displayName = displayNameCache.get(r.name);
+      if (!displayName) return false;
+      return displayName.toLowerCase().includes(query);
     })
     .sort((a, b) => {
       if (b.count !== a.count) return b.count - a.count;
@@ -470,11 +595,23 @@ function renderSummary(users) {
   list.innerHTML = rows
     .map(r =>
       `<div class="summary-row">
-        <span class="summary-name">${r.name}</span>
+        <span class="summary-name-wrap">
+          <span class="summary-name" data-login="${r.name}">${r.name}</span>
+          <a
+            class="summary-link"
+            href="https://www.twitch.tv/${r.name}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Twitchのプロフィールを開く">
+            <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+          </a>
+        </span>
         <span class="summary-count">${r.count}</span>
       </div>`
     )
     .join('');
+
+  updateDisplayNames(list);
 }
 
 function jumpToLine(line) {
