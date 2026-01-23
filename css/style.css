@@ -1,0 +1,336 @@
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: "Zen Kaku Gothic New", "Noto Sans JP", sans-serif;
+    }
+
+    p {
+      margin: 0 0 8px;
+    }
+
+    .input-note {
+      margin: 0 0 2px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    h2,
+    h3 {
+      line-height: 1.2;
+      margin-top: 0;
+    }
+
+    .hero {
+      position: relative;
+      padding: 18px 20px 16px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 188, 87, 0.35), transparent 55%),
+        radial-gradient(circle at 80% 20%, rgba(82, 148, 255, 0.35), transparent 60%),
+        linear-gradient(135deg, #fff6e9 0%, #f4f7ff 45%, #eef9f3 100%);
+      box-shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
+      border: 1px solid rgba(18, 42, 82, 0.08);
+    }
+
+    .hero-title {
+      font-family: "Mochiy Pop One", "Zen Kaku Gothic New", sans-serif;
+      font-size: 1.6rem;
+      margin: 0 0 6px;
+      letter-spacing: 0.02em;
+      color: #1b2a4a;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #2f3d5f;
+      margin: 8px 0 6px;
+    }
+    
+    /* ===== レイアウト全体 ===== */
+    .page {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+      gap: 8px;
+    }
+
+    /* ===== 入力エリア ===== */
+    textarea {
+      width: 100%;
+      flex: 4;               /* 40% */
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    /* ===== 結果表示 ===== */
+    .results {
+      display: flex;
+      flex: 3;               /* 30% */
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .result-panel,
+    .summary-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #f5f5f5;
+      padding: 10px;
+      box-sizing: border-box;
+      border-radius: 6px;
+    }
+
+    .result-panel {
+      flex: 1;
+    }
+
+    .summary-panel {
+      flex: 1;
+    }
+
+    .panel-title {
+      margin: 0 0 8px;
+      font-size: 0.95em;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow: auto;
+      box-sizing: border-box;
+    }
+
+    #out {
+      flex: 1;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      margin: 4px 0 0 0;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .summary-search {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 6px 8px;
+      box-sizing: border-box;
+      font-size: 0.9em;
+    }
+
+    #summaryList {
+      overflow: auto;
+      flex: 1;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .summary-row:nth-child(odd) {
+      background: #ededed;
+    }
+
+    .summary-name-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .summary-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .summary-count {
+      font-weight: bold;
+      min-width: 2.5em;
+      text-align: right;
+    }
+
+    .summary-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      color: #1a0dab;
+    }
+
+    .summary-link:hover {
+      text-decoration: underline;
+    }
+
+    .summary-link .material-symbols-outlined {
+      font-size: 1em;
+      line-height: 1;
+    }
+
+    @media (max-height: 880px) {
+      .page {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+
+      .editor,
+      .result-panel,
+      .summary-panel {
+        max-height: 400px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .results {
+        flex-direction: column;
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      :root {
+        --editor-font-size: 16px;
+      }
+
+      .summary-search {
+        font-size: 16px;
+      }
+    }
+    
+    /* 結果の各行 */
+    .user-line {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .user-line:hover {
+      background: #e0e0ff;
+    }
+
+    .editor {
+      display: flex;
+      flex: 4;
+      min-height: 0;
+    }
+
+    :root {
+      --editor-font-size: 14px;
+      --editor-line-height: 1.4;
+      --editor-padding: 8px;
+    }
+
+    #lineNumbers {
+      width: 36px;
+      padding: var(--editor-padding) 4px;
+      box-sizing: border-box;
+
+      font-family: monospace;
+      font-size: var(--editor-font-size);
+      line-height: var(--editor-line-height);
+
+      background: #f0f0f0;
+      color: #666;
+      text-align: right;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    #src {
+      flex: 1;
+      font-family: monospace;
+      font-size: var(--editor-font-size);
+      line-height: var(--editor-line-height);
+      padding: var(--editor-padding);
+      box-sizing: border-box;
+      overflow: auto;
+    }
+
+    .user-line.active {
+      background: #6a6aff;
+      color: white;
+    }
+    /* ===== その他UI ===== */
+    button {
+      margin-right: 6px;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9em;
+      color: #555;
+      margin: 0;
+      user-select: none;
+    }
+
+    .toggle input {
+      margin: 0;
+    }
+
+    .toggle-row {
+      margin: 6px 0 10px;
+    }
+
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .cta button {
+      margin-right: 0;
+    }
+
+    .cta-text {
+      color: #555;
+      font-size: 0.95em;
+    }
+
+    .copied {
+      color: green;
+      margin-left: 8px;
+      font-size: 0.9em;
+    }
+
+    #countNum {
+      font-size: 1.1em;
+      font-weight: bold;
+      background: linear-gradient(
+        90deg,
+        #ffcc00,
+        #ff66cc,
+        #66ccff,
+        #ffcc00
+      );
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: sparkle 3s linear infinite;
+    }
+  
+    @keyframes sparkle {
+      0%   { background-position:   0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+  
