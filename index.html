@@ -617,7 +617,7 @@ function applyDisplayName(login, displayName) {
 function updateDisplayNames(container) {
   if (!displayNameEnabled) return;
   const names = [
-    ...container.querySelectorAll('.summary-name[data-login]')
+    ...container.querySelectorAll('[data-login]')
   ].map(el => el.dataset.login);
   const unique = [...new Set(names)];
 
