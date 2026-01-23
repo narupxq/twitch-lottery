@@ -189,12 +189,18 @@
     }
 
     @media (max-width: 900px) {
+      .results {
+        flex-direction: column;
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
       :root {
         --editor-font-size: 16px;
       }
 
-      .results {
-        flex-direction: column;
+      .summary-search {
+        font-size: 16px;
       }
     }
     
