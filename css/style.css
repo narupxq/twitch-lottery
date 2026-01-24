@@ -248,6 +248,10 @@
       text-align: right;
       user-select: none;
       overflow: hidden;
+      border: 1px solid #ced4da;
+      border-right: none;
+      border-top-left-radius: 0.375rem;
+      border-bottom-left-radius: 0.375rem;
     }
 
     #src {
@@ -258,6 +262,8 @@
       padding: var(--editor-padding);
       box-sizing: border-box;
       overflow: auto;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
     }
 
     .user-line.active {
