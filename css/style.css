@@ -119,11 +119,8 @@
       background: #fff;
     }
 
-    .summary-search {
-      width: 100%;
+    #summarySearch {
       margin-bottom: 8px;
-      padding: 6px 8px;
-      box-sizing: border-box;
       font-size: 0.9em;
     }
 
@@ -137,7 +134,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      padding: 2px 4px;
+      padding: 2px 20px;
       border-radius: 4px;
     }
 
@@ -161,9 +158,11 @@
     }
 
     .summary-count {
+      font-family: "LINE Seed JP", "Zen Kaku Gothic New", sans-serif;
       font-weight: bold;
       min-width: 2.5em;
       text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
     .summary-link {
