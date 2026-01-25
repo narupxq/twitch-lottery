@@ -43,7 +43,7 @@ function extractUsers(text) {
 
     let cleaned = targetLine;
     const regex =
-      /subscriber\s*\d*|サブスクライバー|音声なしで視聴中|音声のみ|認証済み|シーズン2|GamerDuo|Wylder|LEGENDUS|GLHF\s*Pledge|Raid\s*Race|Raging\s*Wolf\s*Helm|Turbo|Ugly\s*Sweater|prime\s*gaming|prime|gaming|vip|cheer\s*\d{1,3}(?:,\d{3})*|ビッツリーダー\s*\d*|subtember\s*\d{4}|twitch\s*recap\s*\d{4}|\d+(?:\.\d+)?\s*[- ]?\s*(?:year|month)s?|\d+\s*ヶ?月|20\d{2}/gi;
+      /subscriber\s*\d*|サブスクライバー|音声なしで視聴中|音声のみ|認証済み|シーズン2|GamerDuo|Wylder|LEGENDUS|Streamer\s*Awards\s*Tux|Stream\s*For\s*Humanity\s*2|GLHF\s*Pledge|Raid\s*Race|Raging\s*Wolf\s*Helm|Turbo|Ugly\s*Sweater|prime\s*gaming|prime|gaming|vip|cheer\s*\d{1,3}(?:,\d{3})*|ビッツリーダー\s*\d*|subtember\s*\d{4}|twitch\s*recap\s*\d{4}|\d+(?:\.\d+)?\s*[- ]?\s*(?:year|month)s?|\d+\s*ヶ?月|20\d{2}/gi;
 
     while (true) {
       const next = cleaned.replace(regex, '');
