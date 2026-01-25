@@ -365,14 +365,21 @@ const lineNumbers = document.getElementById('lineNumbers');
 const out = document.getElementById('out');
 const summarySearch = document.getElementById('summarySearch');
 const displayNameToggle = document.getElementById('displayNameToggle');
+const displayNameToggleRow = document.querySelector('.toggle-row');
 const resultsPanel = document.querySelector('.results');
 const summaryPanel = document.querySelector('.summary-panel');
 
 function updateSummaryPanelVisibility(hasUsers) {
   const shouldShow = Boolean(hasUsers);
-  if (!summaryPanel || !resultsPanel) return;
-  summaryPanel.classList.toggle('is-hidden', !shouldShow);
-  resultsPanel.classList.toggle('is-summary-hidden', !shouldShow);
+  if (summaryPanel) {
+    summaryPanel.classList.toggle('is-hidden', !shouldShow);
+  }
+  if (resultsPanel) {
+    resultsPanel.classList.toggle('is-summary-hidden', !shouldShow);
+  }
+  if (displayNameToggleRow) {
+    displayNameToggleRow.classList.toggle('is-hidden', !shouldShow);
+  }
 }
 
 function updateLineNumbers() {
