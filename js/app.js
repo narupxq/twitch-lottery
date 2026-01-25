@@ -110,7 +110,12 @@ function run() {
   renderResults(users);
 
   document.getElementById('countNum').textContent = `${users.length} 人`;
-  renderSummary(users);
+  if (users.length > 0) {
+    updateSummaryPanelVisibility(true);
+    renderSummary(users);
+  } else {
+    updateSummaryPanelVisibility(false);
+  }
 
   const errorInfo = document.getElementById('errorInfo');
 
@@ -360,6 +365,15 @@ const lineNumbers = document.getElementById('lineNumbers');
 const out = document.getElementById('out');
 const summarySearch = document.getElementById('summarySearch');
 const displayNameToggle = document.getElementById('displayNameToggle');
+const resultsPanel = document.querySelector('.results');
+const summaryPanel = document.querySelector('.summary-panel');
+
+function updateSummaryPanelVisibility(hasUsers) {
+  const shouldShow = Boolean(hasUsers);
+  if (!summaryPanel || !resultsPanel) return;
+  summaryPanel.classList.toggle('is-hidden', !shouldShow);
+  resultsPanel.classList.toggle('is-summary-hidden', !shouldShow);
+}
 
 function updateLineNumbers() {
   const lines = textarea.value.split('\n').length;

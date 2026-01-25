@@ -79,6 +79,10 @@
       min-height: 0;
     }
 
+    .results.is-summary-hidden {
+      gap: 0;
+    }
+
     .result-panel,
     .summary-panel {
       display: flex;
@@ -96,6 +100,23 @@
 
     .summary-panel {
       flex: 1;
+      max-width: 100%;
+      max-height: 1200px;
+      overflow: hidden;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 2s ease, transform 2s ease,
+        max-width 2s ease, max-height 2s ease, padding 2s ease;
+      will-change: opacity, transform, max-width, max-height;
+    }
+
+    .summary-panel.is-hidden {
+      max-width: 0;
+      max-height: 0;
+      padding: 0;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
     }
 
     .panel-title {
