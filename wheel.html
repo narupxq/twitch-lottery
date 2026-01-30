@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Web ルーレット</title>
+  <meta name="description" content="これはランダム セレクターで、一般的なルーレット ゲームの Web バージョンで、名前をランダムに選択するのに役立ちます。">
+
+  <link rel="stylesheet" href="assets/wheel/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/wheel/css/style.css">
+  <script src="assets/wheel/js/d3.v3.min.js" charset="utf-8"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <span onclick="showNav()" class="nav-toggle"></span>
+      <h1>Web ルーレット</h1>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="box convert">
+      <div class="row">
+        <div class="col-lg-8 col-12 wheel-container d-flex justify-content-center">
+          <div id="chart"></div>
+          <div id="box">
+            <div id="alert-box">
+              <h1 id="selected-op">YES</h1>
+              <button id="delete-btn" class="del-btn" onclick="deleteSelected()">抽選対象から消す</button>
+              <a href="#" class="close-btn" onclick="pop(); return false;">閉じる</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mt-5 col-12">
+          <div class="row p-sm-0 p-5">
+            <div class="col-sm col-12 ml-sm-5 mr-lg-1 mr-sm-2 my-2 result-box">
+              <div class="row p-sm-0">
+                <button id="randomize-btn" onclick="randomizeInput()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shuffle" viewbox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3v1c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.317 1.918C9.828 10.99 11.204 12 13 12v1c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1 0-1H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.317-1.918C4.172 5.01 2.796 4 1 4H.5a.5.5 0 0 1-.5-.5z"/>
+                    <path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/>
+                  </svg>
+                </button>
+                <button id="sort-btn" onclick="sortInput()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sort-alpha-down" viewbox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M10.082 5.629 9.664 7H8.598l1.789-5.332h1.234L13.402 7h-1.12l-.419-1.371h-1.781zm1.57-.785L11 2.687h-.047l-.652 2.157h1.351z"/>
+                    <path d="M12.96 14H9.028v-.691l2.579-3.72v-.054H9.098v-.867h3.785v.691l-2.567 3.72v.054h2.645V14zM4.5 2.5a.5.5 0 0 0-1 0v9.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 1.999.007.007a.497.497 0 0 0 .7-.006l2-2a.5.5 0 0 0-.707-.708L4.5 12.293V2.5z"/>
+                  </svg>
+                </button>
+                <button id="clear-btn" onclick="clearInput()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewbox="0 0 16 16">
+                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/>
+                  </svg>
+                </button>
+              </div>
+
+              <textarea rows="10" cols="40" id="input-text">Name1
+Name2
+Name3
+Name4
+Name5
+Name6</textarea>
+
+              <div class="row p-sm-0">
+                <button id="fullscreen-btn" onclick="toggleFullscreen()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-fullscreen" viewbox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1 1 0v3.975a.5.5 0 0 1-.5.5H11.5a.5.5 0 0 1 0-1h2.768l-4.096-4.096a.5.5 0 0 1 0-.707zm0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707zm-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707z"/>
+                  </svg>
+                </button>
+                <select id="color-selector">
+                  <option value="category20">カラースタイル 1</option>
+                  <option value="category10">カラースタイル 2</option>
+                  <option value="category20b">カラースタイル 3</option>
+                  <option value="category20c">カラースタイル 4</option>
+                  <option value="customColor5">カラースタイル 5</option>
+                  <option value="customColor6">カラースタイル 6</option>
+                  <option value="customColor7">カラースタイル 7</option>
+                  <option value="customColor8">カラースタイル 8</option>
+                  <option value="customColor9">カラースタイル 9</option>
+                  <option value="customColor10">カラースタイル 10</option>
+                </select>
+                <input type="checkbox" id="sound-checkbox" checked>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="36" fill="currentColor" class="bi bi-music-note-beamed" viewbox="0 0 16 16">
+                  <path d="M6 13c0 1.105-1.12 2-2.5 2S1 14.105 1 13c0-1.104 1.12-2 2.5-2s2.5.896 2.5 2zm9-2c0 1.105-1.12 2-2.5 2s-2.5-.895-2.5-2 1.12-2 2.5-2 2.5.895 2.5 2z"/>
+                  <path fill-rule="evenodd" d="M14 11V2h1v9h-1zM6 3v10H5V3h1z"/>
+                  <path d="M5 2.905a1 1 0 0 1 .9-.995l8-.8a1 1 0 0 1 1.1.995V3L5 4V2.905z"/>
+                </svg>
+              </div>
+
+              <textarea rows="10" cols="40" id="output-text"></textarea>
+
+              <div class="row p-sm-0">
+                <button id="clear-btn" onclick="clearoutput()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewbox="0 0 16 16">
+                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="col-sm mr-lg-1 col-12 my-2 result-box" id="maybe-container" style="display: none;">
+                <h2 id="maybe-count">0</h2>
+                <p>MAYBE</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <audio src="assets/wheel/audio/spin-tick.mp3" id="spin-tick"></audio>
+      <audio src="assets/wheel/audio/celebration.mp3" id="celeb"></audio>
+
+      <script src="assets/wheel/js/jquery-3.2.1.slim.min.js"></script>
+      <script src="assets/wheel/js/popper.min.js"></script>
+      <script src="assets/wheel/js/bootstrap.min.js"></script>
+      <script src="assets/wheel/js/wheel.js"></script>
+      <script>
+        (function () {
+          const selectedOp = document.getElementById('selected-op');
+          if (!selectedOp) return;
+
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const minSize = 10;
+          let selectedBaseSize = null;
+          let selectedFamily = null;
+          let selectedWeight = null;
+          let selectedStyle = null;
+
+          function readSelectedStyle() {
+            const style = window.getComputedStyle(selectedOp);
+            selectedBaseSize = parseFloat(style.fontSize) || 24;
+            selectedFamily = style.fontFamily || 'sans-serif';
+            selectedWeight = style.fontWeight || 'normal';
+            selectedStyle = style.fontStyle || 'normal';
+            selectedOp.style.whiteSpace = 'nowrap';
+          }
+
+          function getSelectedWidth() {
+            const parent = selectedOp.parentElement;
+            if (!parent) return selectedOp.clientWidth;
+            const style = window.getComputedStyle(parent);
+            const paddingLeft = parseFloat(style.paddingLeft) || 0;
+            const paddingRight = parseFloat(style.paddingRight) || 0;
+            return parent.clientWidth - paddingLeft - paddingRight;
+          }
+
+          function measureWidth(text, size, family, weight, style) {
+            ctx.font = `${style} ${weight} ${size}px ${family}`;
+            return ctx.measureText(text).width;
+          }
+
+          function adjustSelectedFont() {
+            if (selectedBaseSize === null) readSelectedStyle();
+            const text = selectedOp.textContent || '';
+            if (!text) {
+              selectedOp.style.fontSize = `${selectedBaseSize}px`;
+              return;
+            }
+            const targetWidth = getSelectedWidth();
+            if (targetWidth <= 0) return;
+
+            let size = selectedBaseSize;
+            let width = measureWidth(text, size, selectedFamily, selectedWeight, selectedStyle);
+            while (width > targetWidth && size > minSize) {
+              size -= 1;
+              width = measureWidth(text, size, selectedFamily, selectedWeight, selectedStyle);
+            }
+
+            selectedOp.style.fontSize = `${size}px`;
+          }
+
+          function wrapAndAdjust(fnName) {
+            const original = window[fnName];
+            if (typeof original !== 'function') return;
+            window[fnName] = function (...args) {
+              const result = original.apply(this, args);
+              // Run on next frame, after layout, and after font load if needed.
+              requestAnimationFrame(adjustSelectedFont);
+              setTimeout(adjustSelectedFont, 60);
+              if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(adjustSelectedFont).catch(() => {});
+              }
+              return result;
+            };
+          }
+
+          readSelectedStyle();
+          adjustSelectedFont();
+
+          window.addEventListener('resize', () => requestAnimationFrame(adjustSelectedFont));
+          wrapAndAdjust('pop');
+          wrapAndAdjust('clearoutput');
+        })();
+      </script>
+      <script>
+        (function () {
+          const key = 'wheelInput';
+          const value = localStorage.getItem(key);
+          if (!value) return;
+          const input = document.getElementById('input-text');
+          if (!input) return;
+          input.value = value;
+          localStorage.removeItem(key);
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          if (typeof updateChart === 'function') {
+            updateChart();
+          }
+        })();
+      </script>
+    </div>
+
+    <div class="box explain">
+      <h3>Web ルーレット</h3>
+      <div class="intro-kg">
+        <p>これはランダムセレクターです。一般的なルーレットゲームのWeb版で、名前をランダムに選ぶのに使えます。イベントやゲームの当選者を選ぶときなどに便利です。</p>
+        <ol>
+          <li>ルーレットの右側の入力欄に参加者の名前を1行ずつ入力します。追加した名前はホイールに自動で反映されます。</li>
+          <li>ランダム並び替えや効果音の有無などの機能を選べます。</li>
+          <li>ホイール中央のボタンをクリックして抽選を開始します。</li>
+          <li>ホイールが回転し、停止するとポップアップに結果が表示されます。</li>
+          <li>結果を抽選対象から外すか、抽選対象に残すかを選べます。「抽選対象から消す」を押すと、元のリストとホイールから取り除かれます。</li>
+          <li>抽選結果は2つ目の出力欄に順番に追加されます。</li>
+        </ol>
+        <h3>プライバシーについて</h3>
+        <p>このルーレットツールは、入力内容を保存・送信しません。すべてブラウザ内でローカルに処理されます。</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/wheel/js/dark.js"></script>
+  <script>
+    function showNav(){
+      document.querySelector("nav").classList.toggle("active");
+      document.querySelector(".nav-toggle").classList.toggle("active");
+    }
+  </script>
+</body>
+</html>

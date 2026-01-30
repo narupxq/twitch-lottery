@@ -371,6 +371,8 @@ const summaryPanel = document.querySelector('.summary-panel');
 
 function updateSummaryPanelVisibility(hasUsers) {
   const shouldShow = Boolean(hasUsers);
+  const hadSummaryHidden = summaryPanel ? summaryPanel.classList.contains('is-hidden') : false;
+  const hadToggleHidden = displayNameToggleRow ? displayNameToggleRow.classList.contains('is-hidden') : false;
   if (summaryPanel) {
     summaryPanel.classList.toggle('is-hidden', !shouldShow);
   }
@@ -379,6 +381,11 @@ function updateSummaryPanelVisibility(hasUsers) {
   }
   if (displayNameToggleRow) {
     displayNameToggleRow.classList.toggle('is-hidden', !shouldShow);
+  }
+  const summaryChanged = summaryPanel && hadSummaryHidden !== !shouldShow;
+  const toggleChanged = displayNameToggleRow && hadToggleHidden !== !shouldShow;
+  if (summaryChanged || toggleChanged) {
+    pendingScrollAfterTransition = true;
   }
 }
 
@@ -389,6 +396,42 @@ function updateLineNumbers() {
     html += i + '<br>';
   }
   lineNumbers.innerHTML = html;
+}
+
+let pendingScrollAfterTransition = false;
+function scrollSrcToBottom() {
+  const target = document.getElementById('src');
+  if (!target) return;
+  const start = target.scrollTop;
+  const end = target.scrollHeight;
+  const duration = 200;
+  const startTime = performance.now();
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    target.scrollTop = start + (end - start) * eased;
+    if (t < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+function handleTransitionEnd() {
+  if (!pendingScrollAfterTransition) return;
+  pendingScrollAfterTransition = false;
+  scrollSrcToBottom();
+}
+
+if (summaryPanel) {
+  summaryPanel.addEventListener('transitionend', handleTransitionEnd);
+}
+
+if (displayNameToggleRow) {
+  displayNameToggleRow.addEventListener('transitionend', handleTransitionEnd);
 }
 
 textarea.addEventListener('scroll', () => {
@@ -480,3 +523,15 @@ srcTextarea.addEventListener('input', () => {
   updateLineNumbers();
   run();
 });
+
+const localWheelLink = document.getElementById('localWheelLink');
+if (localWheelLink) {
+  localWheelLink.addEventListener('click', () => {
+    const out = document.getElementById('out');
+    if (!out) return;
+    const text = out.innerText.trim();
+    if (text) {
+      localStorage.setItem('wheelInput', text);
+    }
+  });
+}
