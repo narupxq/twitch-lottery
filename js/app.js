@@ -13,10 +13,27 @@ function extractUsers(text) {
     const lineNumber =
       text.substring(0, startIndex).split('\n').length;
 
-    const lines = block
-      .split('\n')
+    const rawLines = block.split('\n');
+    const lines = rawLines
       .map(l => l.trim())
       .filter(Boolean);
+
+    // 3行以上は「空行抜け」の可能性が高いのでエラー扱いにする
+    if (lines.length > 2) {
+      let offset = 0;
+      rawLines.forEach((line, i) => {
+        const trimmed = line.trim();
+        if (trimmed) {
+          errors.push({
+            line: lineNumber + i,
+            index: startIndex + offset,
+            reason: 'missing-blank'
+          });
+        }
+        offset += line.length + 1;
+      });
+      continue;
+    }
 
     // 1行なら「○日前」を自動補完してから解析する（途中までコピペされたとき用）
     let fixedLines = lines.slice(0, 2);
@@ -31,7 +48,7 @@ function extractUsers(text) {
       fixedLines[0];
 
     if (!targetLine) {
-      errors.push({ line: lineNumber });
+      errors.push({ line: lineNumber, index: startIndex });
       continue;
     }
 
@@ -60,7 +77,7 @@ function extractUsers(text) {
         index: startIndex
       });
     } else {
-      errors.push({ line: lineNumber });
+      errors.push({ line: lineNumber, index: startIndex });
     }
   }
 
@@ -107,7 +124,7 @@ function run() {
 
   lastUsers = users;
 
-  renderResults(users);
+  renderResults(users, errors);
 
   document.getElementById('countNum').textContent = `${users.length} 人`;
   if (users.length > 0) {
@@ -146,12 +163,23 @@ let lastUsers = [];
 let rerenderTimer = null;
 let displayNameEnabled = true;
 
-function renderResults(users) {
+function renderResults(users, errors = []) {
   const out = document.getElementById('out');
-  out.innerHTML = users
-    .map(u =>
-      `<div class="user-line" data-index="${u.index}" data-login="${u.name}">${u.name}</div>`
-    )
+  const combined = [
+    ...users.map(u => ({ type: 'user', index: u.index, name: u.name })),
+    ...errors.map(e => ({ type: 'error', index: e.index, line: e.line, reason: e.reason }))
+  ].sort((a, b) => a.index - b.index);
+
+  out.innerHTML = combined
+    .map(item => {
+      if (item.type === 'user') {
+        return `<div class="user-line" data-index="${item.index}" data-login="${item.name}">${item.name}</div>`;
+      }
+      const reasonText = item.reason === 'missing-blank'
+        ? '空行が足りない可能性'
+        : '解釈不可';
+      return `<div class="error-line" data-index="${item.index}" data-line="${item.line}">⚠ ${item.line}行目：${reasonText}</div>`;
+    })
     .join('');
   if (displayNameEnabled) {
     updateDisplayNames(out);
